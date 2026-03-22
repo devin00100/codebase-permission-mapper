@@ -501,62 +501,11 @@ class ContextEngine {
         throw new Error('Database file not found');
       }
     } catch (error) {
-      console.log('[Context Engine] Loading sample data:', error.message);
-      this.loadSampleData();
+      console.log('[Context Engine] No database loaded, clearing roles and permissions:', error.message);
+      this.roles = [];
+      this.permissions = [];
+      this.rolePermissions = [];
     }
-  }
-
-  loadSampleData() {
-    this.roles = [
-      { id: 1, name: 'ADMIN', description: 'Administrator', level: 100 },
-      { id: 2, name: 'CLERK', description: 'Clerk', level: 50 }
-    ];
-    
-    this.permissions = [
-      { id: 'perm_1', key: 'auth.users.manage', name: 'Manage Users', category: 'auth' },
-      { id: 'perm_2', key: 'backups.manage', name: 'Manage Backups', category: 'backups' },
-      { id: 'perm_3', key: 'categories.read', name: 'Read Categories', category: 'categories' },
-      { id: 'perm_4', key: 'categories.manage', name: 'Manage Categories', category: 'categories' },
-      { id: 'perm_5', key: 'customers.read', name: 'Read Customers', category: 'customers' },
-      { id: 'perm_6', key: 'customers.create', name: 'Create Customers', category: 'customers' },
-      { id: 'perm_7', key: 'customers.update', name: 'Update Customers', category: 'customers' },
-      { id: 'perm_8', key: 'customers.delete', name: 'Delete Customers', category: 'customers' },
-      { id: 'perm_9', key: 'items.read', name: 'Read Items', category: 'items' },
-      { id: 'perm_10', key: 'items.create', name: 'Create Items', category: 'items' },
-      { id: 'perm_11', key: 'items.update', name: 'Update Items', category: 'items' },
-      { id: 'perm_12', key: 'items.delete', name: 'Delete Items', category: 'items' },
-      { id: 'perm_13', key: 'logs.view', name: 'View Logs', category: 'logs' },
-      { id: 'perm_14', key: 'reports.view', name: 'View Reports', category: 'reports' },
-      { id: 'perm_15', key: 'sales.read', name: 'Read Sales', category: 'sales' },
-      { id: 'perm_16', key: 'sales.create', name: 'Create Sales', category: 'sales' },
-      { id: 'perm_17', key: 'settings.read', name: 'Read Settings', category: 'settings' },
-      { id: 'perm_18', key: 'settings.write', name: 'Write Settings', category: 'settings' },
-      { id: 'perm_19', key: 'units.read', name: 'Read Units', category: 'units' },
-      { id: 'perm_20', key: 'units.manage', name: 'Manage Units', category: 'units' },
-      { id: 'perm_21', key: 'customers.ledger.read', name: 'Read Ledger', category: 'customers' },
-      { id: 'perm_22', key: 'customers.ledger.write', name: 'Write Ledger', category: 'customers' },
-      { id: 'perm_23', key: 'customers.credit.manage', name: 'Manage Credit', category: 'customers' },
-      { id: 'perm_24', key: 'items.stock.adjust', name: 'Adjust Stock', category: 'items' },
-      { id: 'perm_25', key: 'imports.perform', name: 'Perform Imports', category: 'imports' }
-    ];
-    
-    // ADMIN gets all permissions, CLERK gets limited set
-    this.rolePermissions = [];
-    
-    // ADMIN gets everything
-    for (const perm of this.permissions) {
-      this.rolePermissions.push({ roleId: 1, permissionKey: perm.key });
-    }
-    
-    // CLERK gets basic read/limited write permissions
-    const clerkPerms = ['items.read', 'items.create', 'items.update', 'customers.read', 'customers.create', 
-                        'customers.update', 'sales.read', 'sales.create', 'categories.read', 
-                        'units.read', 'reports.view', 'logs.view'];
-    for (const permKey of clerkPerms) {
-      this.rolePermissions.push({ roleId: 2, permissionKey: permKey });
-    }
-    
-    console.log(`[Context Engine] Mock data: ${this.roles.length} roles, ${this.permissions.length} permissions`);
   }
 
   async loadScanResults(scanResultsPath) {

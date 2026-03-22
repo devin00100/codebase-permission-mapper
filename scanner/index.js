@@ -339,7 +339,7 @@ class PermissionScanner {
     if (permConstants) {
       permConstants.forEach(p => {
         const constName = p.split('.')[1].toUpperCase();
-        const resolved = this.constants[constName] || constName.toLowerCase().replace(/_/g, '.');
+        const resolved = this.constants[constName] || constName.toLowerCase();
         if (!permissions.includes(resolved)) {
           permissions.push(resolved);
         }
