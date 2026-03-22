@@ -7,11 +7,11 @@ import {
   Key,
   AlertTriangle,
   CheckCircle,
-  XCircle,
-  Code
+  XCircle
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { PermissionMap, EndpointWithMetadata } from '@/types';
 
@@ -150,6 +150,7 @@ export function EndpointAnalyzer({ data }: EndpointAnalyzerProps) {
               </CardHeader>
             </Card>
 
+
             {isProtectedEndpoint(selectedEndpoint) ? (
               <>
                 {/* Required Permissions */}
@@ -272,7 +273,7 @@ export function EndpointAnalyzer({ data }: EndpointAnalyzerProps) {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <Code className="w-16 h-16 text-slate-600 mb-4" />
+            <FileCode className="w-16 h-16 text-slate-600 mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">Select an Endpoint</h3>
             <p className="text-slate-400">Click on an endpoint from the list to analyze its permissions</p>
           </div>

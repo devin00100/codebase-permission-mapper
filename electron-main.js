@@ -200,6 +200,7 @@ class PermissionScanner {
     }
     return endpoints;
   }
+  
 
   getPatternsForFramework(framework) {
     const commonAuthCheck = /(?:requireAuth|requirePermission|checkPermission|hasPermission|authorize)\s*\(|@(?:UseGuards|Scopes|Roles|Public)/i;
@@ -404,159 +405,129 @@ class PermissionScanner {
 // ============================================
 class ContextEngine {
   constructor(dbPath) {
-    this.dbPath = dbPath || 'C:/ProgramData/POSServer/data/sql.data';
+    this.dbPath = dbPath;
     this.roles = [];
     this.permissions = [];
     this.rolePermissions = [];
     this.permissionMap = null;
     this.endpoints = [];
     this.db = null;
+    this.usingDatabase = false;
+  }
+
+  loadConfig() {
+    const configPath = path.join(getAppPath(), 'mapper.config.json');
+    try {
+      if (fs.existsSync(configPath)) {
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        return config.database?.connection?.filename;
+      }
+    } catch (e) {
+      console.log('[Context Engine] Could not load mapper.config.json');
+    }
+    return null;
   }
 
   async initializeDatabase() {
+    const configDbPath = this.loadConfig();
+    const dbPath = this.dbPath || configDbPath;
+    
+    if (!dbPath) {
+      console.log('[Context Engine] No database path configured. Running without role/permission mapping.');
+      return;
+    }
+    
+    const resolvedDbPath = path.isAbsolute(dbPath) ? dbPath : path.join(getAppPath(), dbPath);
+    
+    if (!fs.existsSync(resolvedDbPath)) {
+      console.log('[Context Engine] Database file not found. Running without role/permission mapping.');
+      return;
+    }
+    
     try {
-      // Try to load sql.js
       const initSqlJs = require('sql.js');
       const SQL = await initSqlJs();
       
-      if (fs.existsSync(this.dbPath)) {
-        console.log('[Context Engine] Loading database from:', this.dbPath);
-        const buffer = fs.readFileSync(this.dbPath);
-        this.db = new SQL.Database(buffer);
+      console.log('[Context Engine] Loading database from:', resolvedDbPath);
+      const buffer = fs.readFileSync(resolvedDbPath);
+      this.db = new SQL.Database(buffer);
+      this.usingDatabase = true;
+      
+      // Load roles
+      try {
+        const rolesResult = this.db.exec('SELECT * FROM roles');
+        if (rolesResult.length > 0) {
+          this.roles = rolesResult[0].values.map(row => ({
+            id: row[0],
+            name: row[1],
+            description: row[2] || '',
+            level: row[3] || 0
+          }));
+        }
+      } catch (e) {
+        console.log('[Context Engine] No roles table found');
+      }
+      
+      // Load permissions
+      try {
+        const permsResult = this.db.exec('SELECT * FROM permissions');
+        if (permsResult.length > 0) {
+          this.permissions = permsResult[0].values.map(row => ({
+            id: row[0]?.toString() || '',
+            key: row[1] || '',
+            name: row[2] || row[1] || '',
+            description: row[3] || '',
+            category: (row[1] || '').split('.')[0] || 'general'
+          }));
+        }
+      } catch (e) {
+        console.log('[Context Engine] No permissions table found, deriving from role_permissions');
+      }
+      
+      // Load role-permission mappings
+      try {
+        const rpQueries = [
+          'SELECT * FROM role_permissions',
+          'SELECT * FROM role_permission',
+          'SELECT * FROM rolepermissions',
+          'SELECT role_id, permission FROM role_permissions'
+        ];
         
-        // Load roles
-        try {
-          const rolesResult = this.db.exec('SELECT * FROM roles');
-          if (rolesResult.length > 0) {
-            this.roles = rolesResult[0].values.map(row => ({
-              id: row[0],
-              name: row[1],
-              description: row[2] || '',
-              level: row[3] || 0
-            }));
-          }
-        } catch (e) {
-          console.log('[Context Engine] No roles table found');
+        for (const query of rpQueries) {
+          try {
+            const rpResult = this.db.exec(query);
+            if (rpResult.length > 0) {
+              this.rolePermissions = rpResult[0].values.map(row => ({
+                roleId: row[0],
+                permissionKey: row[1] || row[2] || ''
+              })).filter(rp => rp.permissionKey);
+              break;
+            }
+          } catch (e) {}
         }
         
-        // Load permissions
-        try {
-          const permsResult = this.db.exec('SELECT * FROM permissions');
-          if (permsResult.length > 0) {
-            this.permissions = permsResult[0].values.map(row => ({
-              id: row[0]?.toString() || '',
-              key: row[1] || '',
-              name: row[2] || row[1] || '',
-              description: row[3] || '',
-              category: (row[1] || '').split('.')[0] || 'general'
-            }));
-          }
-        } catch (e) {
-          console.log('[Context Engine] No permissions table found, deriving from role_permissions');
+        if (this.permissions.length === 0 && this.rolePermissions.length > 0) {
+          const uniquePerms = [...new Set(this.rolePermissions.map(rp => rp.permissionKey))];
+          this.permissions = uniquePerms.map((key, idx) => ({
+            id: `perm_${idx}`,
+            key: key,
+            name: key,
+            category: key.split('.')[0] || 'general'
+          }));
         }
-        
-        // Load role-permission mappings
-        try {
-          // Try different table/column names
-          const rpQueries = [
-            'SELECT * FROM role_permissions',
-            'SELECT * FROM role_permission',
-            'SELECT * FROM rolepermissions',
-            'SELECT role_id, permission FROM role_permissions'
-          ];
-          
-          for (const query of rpQueries) {
-            try {
-              const rpResult = this.db.exec(query);
-              if (rpResult.length > 0) {
-                this.rolePermissions = rpResult[0].values.map(row => ({
-                  roleId: row[0],
-                  permissionKey: row[1] || row[2] || ''
-                })).filter(rp => rp.permissionKey);
-                break;
-              }
-            } catch (e) {}
-          }
-          
-          // If permissions table doesn't exist, derive from role_permissions
-          if (this.permissions.length === 0 && this.rolePermissions.length > 0) {
-            const uniquePerms = [...new Set(this.rolePermissions.map(rp => rp.permissionKey))];
-            this.permissions = uniquePerms.map((key, idx) => ({
-              id: `perm_${idx}`,
-              key: key,
-              name: key,
-              category: key.split('.')[0] || 'general'
-            }));
-          }
-        } catch (e) {
-          console.log('[Context Engine] Could not load role_permissions:', e.message);
-        }
-        
-        console.log(`[Context Engine] Loaded ${this.roles.length} roles, ${this.permissions.length} permissions, ${this.rolePermissions.length} mappings`);
-        
-        if (this.roles.length === 0) {
-          throw new Error('No data found in database');
-        }
-      } else {
-        throw new Error('Database file not found');
+      } catch (e) {
+        console.log('[Context Engine] Could not load role_permissions:', e.message);
+      }
+      
+      console.log(`[Context Engine] Loaded ${this.roles.length} roles, ${this.permissions.length} permissions, ${this.rolePermissions.length} mappings`);
+      
+      if (this.roles.length === 0) {
+        console.log('[Context Engine] Database exists but no roles found. Running without role/permission mapping.');
       }
     } catch (error) {
-      console.log('[Context Engine] Loading sample data:', error.message);
-      this.loadSampleData();
+      console.log('[Context Engine] Could not load database:', error.message);
+      console.log('[Context Engine] Running without role/permission mapping.');
     }
-  }
-
-  loadSampleData() {
-    this.roles = [
-      { id: 1, name: 'ADMIN', description: 'Administrator', level: 100 },
-      { id: 2, name: 'CLERK', description: 'Clerk', level: 50 }
-    ];
-    
-    this.permissions = [
-      { id: 'perm_1', key: 'auth.users.manage', name: 'Manage Users', category: 'auth' },
-      { id: 'perm_2', key: 'backups.manage', name: 'Manage Backups', category: 'backups' },
-      { id: 'perm_3', key: 'categories.read', name: 'Read Categories', category: 'categories' },
-      { id: 'perm_4', key: 'categories.manage', name: 'Manage Categories', category: 'categories' },
-      { id: 'perm_5', key: 'customers.read', name: 'Read Customers', category: 'customers' },
-      { id: 'perm_6', key: 'customers.create', name: 'Create Customers', category: 'customers' },
-      { id: 'perm_7', key: 'customers.update', name: 'Update Customers', category: 'customers' },
-      { id: 'perm_8', key: 'customers.delete', name: 'Delete Customers', category: 'customers' },
-      { id: 'perm_9', key: 'items.read', name: 'Read Items', category: 'items' },
-      { id: 'perm_10', key: 'items.create', name: 'Create Items', category: 'items' },
-      { id: 'perm_11', key: 'items.update', name: 'Update Items', category: 'items' },
-      { id: 'perm_12', key: 'items.delete', name: 'Delete Items', category: 'items' },
-      { id: 'perm_13', key: 'logs.view', name: 'View Logs', category: 'logs' },
-      { id: 'perm_14', key: 'reports.view', name: 'View Reports', category: 'reports' },
-      { id: 'perm_15', key: 'sales.read', name: 'Read Sales', category: 'sales' },
-      { id: 'perm_16', key: 'sales.create', name: 'Create Sales', category: 'sales' },
-      { id: 'perm_17', key: 'settings.read', name: 'Read Settings', category: 'settings' },
-      { id: 'perm_18', key: 'settings.write', name: 'Write Settings', category: 'settings' },
-      { id: 'perm_19', key: 'units.read', name: 'Read Units', category: 'units' },
-      { id: 'perm_20', key: 'units.manage', name: 'Manage Units', category: 'units' },
-      { id: 'perm_21', key: 'customers.ledger.read', name: 'Read Ledger', category: 'customers' },
-      { id: 'perm_22', key: 'customers.ledger.write', name: 'Write Ledger', category: 'customers' },
-      { id: 'perm_23', key: 'customers.credit.manage', name: 'Manage Credit', category: 'customers' },
-      { id: 'perm_24', key: 'items.stock.adjust', name: 'Adjust Stock', category: 'items' },
-      { id: 'perm_25', key: 'imports.perform', name: 'Perform Imports', category: 'imports' }
-    ];
-    
-    // ADMIN gets all permissions, CLERK gets limited set
-    this.rolePermissions = [];
-    
-    // ADMIN gets everything
-    for (const perm of this.permissions) {
-      this.rolePermissions.push({ roleId: 1, permissionKey: perm.key });
-    }
-    
-    // CLERK gets basic read/limited write permissions
-    const clerkPerms = ['items.read', 'items.create', 'items.update', 'customers.read', 'customers.create', 
-                        'customers.update', 'sales.read', 'sales.create', 'categories.read', 
-                        'units.read', 'reports.view', 'logs.view'];
-    for (const permKey of clerkPerms) {
-      this.rolePermissions.push({ roleId: 2, permissionKey: permKey });
-    }
-    
-    console.log(`[Context Engine] Mock data: ${this.roles.length} roles, ${this.permissions.length} permissions`);
   }
 
   async loadScanResults(scanResultsPath) {
