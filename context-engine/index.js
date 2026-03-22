@@ -67,8 +67,8 @@ class ContextEngine {
       const dbPath = path.resolve(this.config.database.connection.filename);
       
       if (!fs.existsSync(dbPath)) {
-        console.warn(`⚠️  Database not found at ${dbPath}. Skipping role/permission mapping.`);
-        return;
+        console.warn(`⚠️  Database not found at ${dbPath}. Creating mock data...`);
+        return this.createMockData();
       }
       
       this.db = await open({
@@ -88,16 +88,88 @@ class ContextEngine {
   /**
    * Create mock data for demonstration
    */
+  createMockData() {
+    console.log('🎭 Creating mock role/permission data for demonstration...');
+    
+    this.roles = [
+      { id: 'role_1', name: 'Super Admin', description: 'Full system access', level: 100 },
+      { id: 'role_2', name: 'Admin', description: 'Administrative access', level: 80 },
+      { id: 'role_3', name: 'Manager', description: 'Department management', level: 60 },
+      { id: 'role_4', name: 'Clerk', description: 'Basic operations', level: 40 },
+      { id: 'role_5', name: 'Viewer', description: 'Read-only access', level: 20 },
+      { id: 'role_6', name: 'Guest', description: 'Limited access', level: 10 }
+    ];
+    
+    this.permissions = [
+      { id: 'perm_1', key: 'users.create', name: 'Create Users', description: 'Can create new users', category: 'users' },
+      { id: 'perm_2', key: 'users.read', name: 'Read Users', description: 'Can view user information', category: 'users' },
+      { id: 'perm_3', key: 'users.update', name: 'Update Users', description: 'Can modify user data', category: 'users' },
+      { id: 'perm_4', key: 'users.delete', name: 'Delete Users', description: 'Can remove users', category: 'users' },
+      { id: 'perm_5', key: 'items.create', name: 'Create Items', description: 'Can create items', category: 'items' },
+      { id: 'perm_6', key: 'items.read', name: 'Read Items', description: 'Can view items', category: 'items' },
+      { id: 'perm_7', key: 'items.update', name: 'Update Items', description: 'Can modify items', category: 'items' },
+      { id: 'perm_8', key: 'items.delete', name: 'Delete Items', description: 'Can delete items', category: 'items' },
+      { id: 'perm_9', key: 'reports.read', name: 'Read Reports', description: 'Can view reports', category: 'reports' },
+      { id: 'perm_10', key: 'reports.export', name: 'Export Reports', description: 'Can export reports', category: 'reports' },
+      { id: 'perm_11', key: 'settings.read', name: 'Read Settings', description: 'Can view settings', category: 'settings' },
+      { id: 'perm_12', key: 'settings.update', name: 'Update Settings', description: 'Can modify settings', category: 'settings' },
+      { id: 'perm_13', key: 'audit.read', name: 'Read Audit Logs', description: 'Can view audit logs', category: 'audit' },
+      { id: 'perm_14', key: 'billing.manage', name: 'Manage Billing', description: 'Can manage billing', category: 'billing' },
+      { id: 'perm_15', key: 'admin.*', name: 'Admin All', description: 'Full admin access', category: 'admin' }
+    ];
+    
+    this.rolePermissions = [
+      // Super Admin - all permissions
+      { roleId: 'role_1', permissionKey: 'admin.*' },
+      
+      // Admin
+      { roleId: 'role_2', permissionKey: 'users.create' },
+      { roleId: 'role_2', permissionKey: 'users.read' },
+      { roleId: 'role_2', permissionKey: 'users.update' },
+      { roleId: 'role_2', permissionKey: 'users.delete' },
+      { roleId: 'role_2', permissionKey: 'items.create' },
+      { roleId: 'role_2', permissionKey: 'items.read' },
+      { roleId: 'role_2', permissionKey: 'items.update' },
+      { roleId: 'role_2', permissionKey: 'items.delete' },
+      { roleId: 'role_2', permissionKey: 'reports.read' },
+      { roleId: 'role_2', permissionKey: 'reports.export' },
+      { roleId: 'role_2', permissionKey: 'settings.read' },
+      { roleId: 'role_2', permissionKey: 'settings.update' },
+      { roleId: 'role_2', permissionKey: 'audit.read' },
+      { roleId: 'role_2', permissionKey: 'billing.manage' },
+      
+      // Manager
+      { roleId: 'role_3', permissionKey: 'users.read' },
+      { roleId: 'role_3', permissionKey: 'users.update' },
+      { roleId: 'role_3', permissionKey: 'items.create' },
+      { roleId: 'role_3', permissionKey: 'items.read' },
+      { roleId: 'role_3', permissionKey: 'items.update' },
+      { roleId: 'role_3', permissionKey: 'items.delete' },
+      { roleId: 'role_3', permissionKey: 'reports.read' },
+      { roleId: 'role_3', permissionKey: 'reports.export' },
+      
+      // Clerk
+      { roleId: 'role_4', permissionKey: 'items.create' },
+      { roleId: 'role_4', permissionKey: 'items.read' },
+      { roleId: 'role_4', permissionKey: 'items.update' },
+      { roleId: 'role_4', permissionKey: 'reports.read' },
+      
+      // Viewer
+      { roleId: 'role_5', permissionKey: 'items.read' },
+      { roleId: 'role_5', permissionKey: 'reports.read' },
+      
+      // Guest
+      { roleId: 'role_6', permissionKey: 'items.read' }
+    ];
+    
+    console.log(`✅ Created ${this.roles.length} roles, ${this.permissions.length} permissions`);
+    return true;
+  }
 
   /**
    * Load data from database
    */
   async loadDataFromDatabase() {
-    if (!this.db) {
-      console.warn('⚠️  No database connection established. Skipping data load.');
-      return;
-    }
-    
     const tables = this.config.database?.tables || {};
     const columns = this.config.database?.columns || {};
     

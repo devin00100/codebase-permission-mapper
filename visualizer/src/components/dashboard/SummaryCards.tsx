@@ -3,14 +3,12 @@ import {
   ShieldCheck, 
   Users, 
   AlertTriangle,
-  FileCode,
-  Database
+  FileCode
 } from 'lucide-react';
 import type { PermissionMap } from '@/types';
 
 interface SummaryCardsProps {
   data: PermissionMap;
-  hasDatabase?: boolean;
 }
 
 interface CardProps {
@@ -47,7 +45,7 @@ function SummaryCard({ title, value, subtitle, icon: Icon, color }: CardProps) {
   );
 }
 
-export function SummaryCards({ data, hasDatabase = true }: SummaryCardsProps) {
+export function SummaryCards({ data }: SummaryCardsProps) {
   const { summary } = data;
   
   const coveragePercent = summary.totalEndpoints > 0 
@@ -55,20 +53,6 @@ export function SummaryCards({ data, hasDatabase = true }: SummaryCardsProps) {
     : 0;
 
   return (
-    <>
-      {!hasDatabase && summary.totalEndpoints > 0 && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-4 flex items-start gap-3">
-          <Database className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-amber-300 font-medium">No Database Connected</p>
-            <p className="text-amber-400/70 text-sm mt-1">
-              Role/permission mapping is disabled. Found {summary.totalEndpoints} endpoints but no roles to map against.
-              Connect a SQLite database with roles and permissions to enable mapping.
-            </p>
-          </div>
-        </div>
-      )}
-    
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <SummaryCard
         title="Total Endpoints"
@@ -102,7 +86,6 @@ export function SummaryCards({ data, hasDatabase = true }: SummaryCardsProps) {
         color={summary.unprotectedEndpoints + summary.orphanPermissions === 0 ? 'green' : 'red'}
       />
     </div>
-    </>
   );
 }
 

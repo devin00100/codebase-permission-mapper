@@ -43,10 +43,9 @@ function App() {
 
   const isElectron = !!window.electronAPI;
 
-  // Load existing data on mount
+  // Setup listeners on mount
   useEffect(() => {
     if (isElectron) {
-      loadExistingData();
       setupListeners();
     }
   }, []);
@@ -210,7 +209,7 @@ function App() {
       case 'matrix':
         return (
           <div className="space-y-6">
-            <SummaryCards data={data} hasDatabase={data.summary.totalRoles > 0} />
+            <SummaryCards data={data} />
             <QuickStats data={data} />
             <MatrixView data={data} />
           </div>

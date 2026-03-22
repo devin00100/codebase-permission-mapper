@@ -9,11 +9,11 @@
     "full": "npm run scan && npm run map",
     "dev": "cd visualizer && npm run dev",
     "build": "cd visualizer && npm run build",
-    "electron:dev": "electron .",
+    "electron:dev": "npm run build && electron .",
     "electron:start": "electron .",
-    "dist": "electron-builder",
-    "dist:win": "electron-builder --win",
-    "dist:portable": "electron-builder --win portable",
+    "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:portable": "npm run build && electron-builder --win portable",
     "setup": "npm install && cd visualizer && npm install"
   },
   "keywords": [
@@ -69,6 +69,7 @@
           ]
         }
       ],
+      "icon": "build/icon.ico",
       "artifactName": "${productName}-${version}.${ext}"
     },
     "portable": {
