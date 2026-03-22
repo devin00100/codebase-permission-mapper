@@ -1,0 +1,41 @@
+{
+  "name": "INVSERVER Permission Map",
+  "version": "1.0.0",
+  "description": "Permission mapping for the INVSERVER backend",
+  "scanner": {
+    "framework": "express",
+    "patterns": {
+      "express": {
+        "routeRegex": "router\\.(get|post|put|delete|patch|head|options)\\s*\\(\\s*['\"`]([^'\"`]+)['\"`]",
+        "permissionRegex": "(requirePermission|checkPermission|hasPermission|authorize)\\s*\\(\\s*((?:PERMISSIONS\\.)?[A-Z0-9_]+|['\"`][^'\"`]+['\"`])\\s*\\)",
+        "middlewareRegex": "middleware\\s*:\\s*\\[([^\\]]+)\\]"
+      }
+    },
+    "mountPath": "/api",
+    "fileExtensions": [".js", ".ts", ".jsx", "tsx"],
+    "excludePatterns": ["node_modules", "dist", "build", "test", "spec", ".git", ".runtime", "backups"]
+  },
+  "database": {
+    "type": "sqlite",
+    "connection": {
+      "filename": "C:/ProgramData/POSServer/data/sql.data"
+    },
+    "tables": {
+      "roles": "roles",
+      "permissions": "permissions",
+      "rolePermissions": "role_permissions"
+    },
+    "columns": {
+      "rolePermission": {
+        "roleId": "role_id",
+        "permissionKey": "permission"
+      }
+    }
+  },
+  "output": {
+    "artifactsDir": "./artifacts",
+    "permissionsMap": "permissions_map.json",
+    "auditReport": "audit_report.json",
+    "documentation": "PERMISSIONS.md"
+  }
+}

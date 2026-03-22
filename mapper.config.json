@@ -1,0 +1,92 @@
+{
+  "name": "Codebase Permission Mapper",
+  "version": "1.0.0",
+  "description": "Automated permission mapping and visualization tool",
+  "scanner": {
+    "framework": "express",
+    "supportedFrameworks": ["express", "nestjs", "fastify", "spring", "django", "flask"],
+    "patterns": {
+      "express": {
+        "routeRegex": "(router\\.(get|post|put|delete|patch|head|options)\\s*\\(\\s*['\"`]([^'\"`]+)['\"`]",
+        "permissionRegex": "(requirePermission|checkPermission|hasPermission|authorize)\\s*\\(\\s*['\"`]([^'\"`]+)['\"`]",
+        "middlewareRegex": "middleware\\s*:\\s*\\[([^\\]]+)\\]"
+      },
+      "nestjs": {
+        "routeRegex": "@(Get|Post|Put|Delete|Patch|Head|Options)\\s*\\(\\s*['\"`]?([^'\"`)]+)",
+        "permissionRegex": "@(Permissions|Roles|Authorize)\\s*\\(\\s*['\"`]([^'\"`]+)['\"`]",
+        "decoratorRegex": "@Controller\\s*\\(\\s*['\"`]?([^'\"`)]+)"
+      },
+      "fastify": {
+        "routeRegex": "(fastify\\.(get|post|put|delete|patch|head|options)\\s*\\(\\s*['\"`]([^'\"`]+)['\"`]",
+        "permissionRegex": "(preHandler|onRequest)\\s*:\\s*\\[?\\s*([^\\]]+)\\]?"
+      }
+    },
+    "fileExtensions": [".js", ".ts", ".jsx", "tsx"],
+    "excludePatterns": ["node_modules", "dist", "build", "test", "spec", ".git"]
+  },
+  "database": {
+    "type": "sqlite",
+    "connection": {
+      "filename": "./database.sqlite"
+    },
+    "tables": {
+      "roles": "roles",
+      "permissions": "permissions",
+      "rolePermissions": "role_permissions"
+    },
+    "columns": {
+      "role": {
+        "id": "id",
+        "name": "name",
+        "description": "description"
+      },
+      "permission": {
+        "id": "id",
+        "key": "key",
+        "name": "name",
+        "description": "description"
+      },
+      "rolePermission": {
+        "roleId": "role_id",
+        "permissionKey": "permission_key"
+      }
+    }
+  },
+  "permissionHierarchy": {
+    "enabled": true,
+    "rules": [
+      {
+        "permission": "admin.*",
+        "implies": ["*"]
+      },
+      {
+        "permission": "items.write",
+        "implies": ["items.create", "items.update"]
+      },
+      {
+        "permission": "items.manage",
+        "implies": ["items.write", "items.read", "items.delete"]
+      },
+      {
+        "permission": "users.manage",
+        "implies": ["users.read", "users.update", "users.create"]
+      }
+    ]
+  },
+  "output": {
+    "artifactsDir": "./artifacts",
+    "permissionsMap": "permissions_map.json",
+    "auditReport": "audit_report.json",
+    "documentation": "PERMISSIONS.md"
+  },
+  "dashboard": {
+    "port": 3000,
+    "host": "localhost",
+    "theme": {
+      "primaryColor": "#3b82f6",
+      "dangerColor": "#ef4444",
+      "warningColor": "#f59e0b",
+      "successColor": "#10b981"
+    }
+  }
+}

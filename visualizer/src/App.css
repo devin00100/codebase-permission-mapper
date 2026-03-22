@@ -1,0 +1,162 @@
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Custom selection */
+::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: white;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Animation for cards */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Heat map cell styles */
+.heat-cell {
+  transition: all 0.2s ease;
+}
+
+.heat-cell:hover {
+  transform: scale(1.1);
+  z-index: 10;
+}
+
+/* Table row hover */
+.table-row-hover {
+  transition: background-color 0.15s ease;
+}
+
+/* Badge animations */
+.badge-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Code block styles */
+pre {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+/* Tooltip animations */
+[data-radix-popper-content-wrapper] {
+  animation: tooltipFadeIn 0.15s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: all 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.3);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Status indicators */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot--success {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.status-dot--warning {
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+}
+
+.status-dot--error {
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+/* Method badge colors */
+.method-get { @apply bg-green-500/20 text-green-400 border-green-500/30; }
+.method-post { @apply bg-blue-500/20 text-blue-400 border-blue-500/30; }
+.method-put { @apply bg-yellow-500/20 text-yellow-400 border-yellow-500/30; }
+.method-delete { @apply bg-red-500/20 text-red-400 border-red-500/30; }
+.method-patch { @apply bg-purple-500/20 text-purple-400 border-purple-500/30; }
+
+/* Risk level colors */
+.risk-critical { @apply bg-red-500 text-white; }
+.risk-high { @apply bg-orange-500 text-white; }
+.risk-medium { @apply bg-yellow-500 text-black; }
+.risk-low { @apply bg-green-500 text-white; }

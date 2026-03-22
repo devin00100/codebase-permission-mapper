@@ -67,3 +67,4 @@ echo To run the app, double-click the .exe file.
 echo No Node.js installation required!
 echo.
 pause
+
