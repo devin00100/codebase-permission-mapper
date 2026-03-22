@@ -35,7 +35,7 @@
   "build": {
     "appId": "com.dudemac.mapper",
     "productName": "Permission Mapper",
-    "copyright": "Copyright 2024",
+    "copyright": "Copyright 2025",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -55,14 +55,18 @@
       {
         "from": "node_modules/sql.js/dist",
         "to": "sql.js",
-        "filter": ["sql-wasm.wasm"]
+        "filter": [
+          "sql-wasm.wasm"
+        ]
       }
     ],
     "win": {
       "target": [
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.ico",
